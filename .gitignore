@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific data and weights (CRITICAL: Do not commit large files)
+data/raw/
+data/idd_yolo/
+data/annotations/
+checkpoints/
+results/
+videos/
+*.pth
+*.pt
+*.zip
+*.mp4
+*.MP4
+*.mov
+*.MOV
+
+# Jupyter Notebook Defaults
+.ipynb_checkpoints
+
+# Mac OS
+.DS_Store
