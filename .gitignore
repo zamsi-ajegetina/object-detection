@@ -38,6 +38,8 @@ data/raw/
 data/idd_yolo/
 data/annotations/
 checkpoints/
+Sprint1_Deliverable/
+Sprint1_Deliverable.zip
 results/
 videos/
 *.pth
