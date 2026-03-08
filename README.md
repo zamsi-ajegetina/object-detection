@@ -1,81 +1,135 @@
 # PROSIT 2: Autonomous Driving Perception (Ghanaian Roads)
 
-A comprehensive PyTorch-based driver-assistance vision module designed to tackle extreme **Visual Domain Shift** on unstructured West African roads (potholes, faded lane markings, extreme dust, informal speed bumps, and dense traffic like *okadas*).
+A PyTorch-based driver-assistance vision module tackling **Visual Domain Shift** on West African roads — potholes, laterite dust haze, informal speed bumps, faded lane markings, and chaotic mixed traffic (okadas, trotros, livestock).
 
-Built from scratch as part of the PROSIT 2 assignment for the Department of Urban Roads (DUR), Ghana.
+Built from scratch for the Department of Urban Roads (DUR), Ghana.
 
-## 🚀 Key Features
+**Group Members**: Joseph Ajegetina Ajongba · Nana Yaw Adjei Koranteng · Kevin Takyi Yeboah · Abubakari Sadik Osman
 
-- **No Black Box Libraries**: The Object Detection architecture, Non-Maximum Suppression (NMS), and composite Multi-Part Loss functions are implemented entirely **from scratch** in pure PyTorch (no `ultralytics` YOLO or `torchvision.models.detection` shortcuts).
-- **Physical Spatial Reasoning**: Uses Inverse Perspective Mapping (IPM) to estimate the physical distance (in meters) and lateral offset of detected objects directly from a monocular dashboard camera.
-- **Domain-Specific Augmentation Strategy**: Uses `albumentations` to heavily simulate Ghanaian environmental hazards like laterite dust haze, extreme shadow casting, and motion blur during training.
-- **Self-Aware Failure Mining**: Integrates Google's Vision-Language Model (Gemini VLM) to automatically diagnose detector failures on unlabelled frames, generate a failure report, and mine hard negatives for targeted retraining.
-- **Lightweight Tracking**: Assigns consistent object IDs across consecutive video frames using Simple Online and Realtime Tracking (SORT).
+---
 
-## 📂 Project Structure (3 Sprints)
+## Results
 
-The project was executed over three massive sprints (~360 hours theory/practice):
+### Sprint 1 — Road Segmentation Ablation
 
-### Sprint 1: Surviving Visual Domain Shift (Road Segmentation)
-- Extracted and auto-annotated unlabelled dashboard footage using classical CV techniques.
-- Built a native `U-Net` semantic segmentation model to classify drivable road surface vs background.
-- Conducted a zero-shot ablation study proving that injecting custom domain augmentations (shadows, hue shifts) improved generalisation on Ghanaian roads by **+19.5% mIoU** compared to a clean-data baseline.
+| Model | Training | Zero-shot mIoU (Ghana) |
+|---|---|---|
+| Baseline | CamVid only | 5.07% |
+| Augmented | CamVid + Ghana-condition augs | **8.96%** |
+| **Δ** | | **+3.89 pp (+77%)** |
 
-### Sprint 2: From Surfaces to Objects (Object Detection)
-- Recycled the trained U-Net Encoder to serve as the feature extraction backbone.
-- Built a custom `13x13` grid-prediction head predicting objectness, bounding boxes, and 8 African-context classes (e.g. `pedestrian`, `motorcycle`, `car`, `speed_bump`, `pothole`, `open_drain`).
-- Converted and trained on the India Driving Dataset (IDD) as a proxy for chaotic developing-world traffic.
-- Wrote custom Evaluation pipelines outputting 11-point interpolated `mAP@0.5` and JSONL structured event logs with physical object distances.
+### Sprint 2 — Custom Object Detector (IDD val, 977 samples)
 
-### Sprint 3: Self-Aware Failure Mining (VLM Integration)
-- Built an end-to-end pipeline (`failure_miner.py`) that runs the Sprint 2 detector on unlabelled Ghanaian frames to identify low-confidence or zero-detection failures.
-- Pinged the Gemini API locally with failing frames, asking the VLM *why* the detector failed (e.g., "heavy occlusion by dust haze").
-- Automatically hardened the data augmentation pipeline based on identified failure modes and retrained the model on mined hard-negatives.
+| Class | GT | Detections | AP@0.5 |
+|---|---|---|---|
+| pedestrian | 2,532 | 1,676 | 4.55% |
+| motorcycle | 1,258 | 494 | 9.09% |
+| car | 2,967 | 2,743 | 12.52% |
+| traffic_cone | 369 | 14 | 0.00% |
+| animal | 163 | 45 | 0.00% |
+| **mAP@0.5** | | | **5.23%** |
 
-## 🛠️ Installation & Setup
+### Sprint 3 — VLM Failure Mining + Retraining
+
+| | Sprint 2 | Sprint 3 | Δ |
+|---|---|---|---|
+| mAP@0.5 (IDD val) | 5.23% | **6.11%** | **+16.8%** |
+| Pedestrian AP | 4.55% | 9.09% | +100% |
+| Ghana detections | 916 frames | **1,418 frames** | +54.8% |
+| Ghana coverage | 43.4% | **48.8%** | +5.4pp |
+
+VLM diagnosed: `dust_haze` (76%) · `low_contrast` (24%) · avg difficulty 7.6/10
+
+---
+
+## Architecture
+
+```
+Sprint 1: CamVid → U-Net (BCE+Dice) → ablation vs Ghana pseudo-masks
+Sprint 2: U-Net encoder → 13×13 grid head → mAP@0.5 + event_log.jsonl
+Sprint 3: detector → Ghana failure mining → Gemini VLM → retrain
+```
+
+**Key constraints met** (PROSIT hard requirements):
+- ✅ No library shortcuts — NMS, all 3 loss components implemented in pure PyTorch
+- ✅ 8 domain-relevant classes (pothole, speed_bump, pedestrian, motorcycle, car, traffic_cone, animal, open_drain)
+- ✅ Structured event log: `[frame_id, class, confidence, distance_x_m, offset_y_m]`
+- ✅ Ground-plane distance projection via pinhole camera model
+- ✅ VLM integration (OpenRouter) with structured JSON failure diagnosis prompts
+- ✅ Ablation studies in both Sprint 1 and Sprint 3
+
+---
+
+## Repo Structure
+
+```
+src/
+├── models/          segmentation_model.py, detection_model.py
+├── data/            dataset.py, detection_dataset.py, augmentations.py, convert_idd.py
+├── metrics/         detection_loss.py, nms.py
+├── utils/           projection.py
+├── vlm/             vlm_client.py, failure_miner.py, prompts.py
+├── train.py / train_augmented.py          Sprint 1
+├── train_detector.py / train_detector_v2.py  Sprint 2/3
+├── ablation.py, evaluate_detector.py
+└── infer_ghana.py   Inference on unlabelled Ghana footage
+docs/
+├── report.md        Full technical report with real results
+└── prosit2-reference.md
+PROSIT2_Colab.ipynb  Orchestrator notebook — run all sprints on Colab
+```
+
+---
+
+## Quick Start (Colab)
+
+Open `PROSIT2_Colab.ipynb` in Google Colab. Set:
+1. `REPO_URL` — your GitHub repo URL (Cell 0.1)
+2. `DRIVE_ROOT` — your Google Drive path (Cell 0.2)
+3. `OPENROUTER_KEY` — your OpenRouter API key (Cell 3.1)
+
+Then **Runtime → Run All**.
+
+## Local Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME/prosits/object-detection
-
-# Create a virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO/prosits/object-detection
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-> **Note**: Datasets (`data/raw`, `data/idd_yolo`) and model weights (`checkpoints/`) are excluded from version control due to GitHub size limits. Model training was performed on Google Colab.
+> Datasets and checkpoints are excluded from git (see `.gitignore`). Training was done on Google Colab with GPU.
 
-## 📊 Running the Code
+## Key Commands
 
-### 1. Object Detection Training (Sprint 2/3)
 ```bash
-python src/train_detector.py \
-    --data_dir data/idd_yolo/train \
-    --batch_size 8 \
-    --epochs 30
+# Sprint 1 — train segmentation
+python src/train.py --data_dir data/camvid --checkpoint_dir checkpoints/
+
+# Sprint 2 — train detector
+python src/train_detector.py --data_dir data/idd_yolo/train --epochs 30
+
+# Sprint 2 — evaluate mAP@0.5
+python src/evaluate_detector.py --data_dir data/idd_yolo/val \
+    --model_path checkpoints/detector_best.pth --output_dir results/sprint2/
+
+# Sprint 3 — VLM failure mining (OpenRouter)
+python src/vlm/failure_miner.py --ghana_dir data/raw/ghana \
+    --backend openrouter --api_key $OPENROUTER_API_KEY \
+    --model_name "meta-llama/llama-3.2-11b-vision-instruct:free"
+
+# Sprint 3 — retrain
+python src/train_detector_v2.py --data_dir data/idd_yolo/train \
+    --pretrained checkpoints/detector_best.pth \
+    --failure_analysis results/failure_mining/failure_analysis.json
+
+# Inference on Ghana footage (no labels needed)
+python src/infer_ghana.py --ghana_dir data/raw/ghana \
+    --model_path checkpoints/detector_v2_best.pth \
+    --output_dir results/ghana_detections/
 ```
 
-### 2. Evaluation & Projection
-Computes mAP@0.5 and exports bounding box visualisations plus `event_log.jsonl`.
-```bash
-python src/evaluate_detector.py \
-    --data_dir data/idd_yolo/val \
-    --model_path checkpoints/detector_best.pth \
-    --output_dir results/sprint2_detection/
-```
+## Documentation
 
-### 3. VLM Failure Mining Pipeline (Sprint 3)
-Requires a valid Google Gemini API Key.
-```bash
-export GEMINI_API_KEY="your_api_key_here"
-python src/vlm/failure_miner.py \
-    --ghana_dir data/raw/ghana \
-    --model_path checkpoints/detector_best.pth
-```
-
-## 📝 Documentation
-Detailed walkthroughs of the engineering challenges and ablation studies are available in the `docs/` folder (or via the system-generated AI artifacts).
+Full technical report: [`docs/report.md`](docs/report.md)
