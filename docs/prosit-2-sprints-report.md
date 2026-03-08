@@ -108,7 +108,7 @@ IDD provides developing-world traffic data (tuk-tuks, dense pedestrians, mixed l
 | **mAP@0.5** | | | **5.23%** |
 
 ### Event Log (Structured Output)
-4,972 detections logged to [event_log.jsonl](file:///home/ajegetina/coding/school/ashesi/semester-2/vision/prosits/object-detection/results/sprint2/event_log.jsonl):
+4,972 detections logged to [event_log.jsonl](../results/sprint2/event_log.jsonl):
 ```jsonl
 {"frame_id": 42, "class": "car", "confidence": 0.74, "distance_x_m": 5.2, "offset_y_m": -1.1}
 ```
@@ -118,13 +118,13 @@ IDD provides developing-world traffic data (tuk-tuks, dense pedestrians, mixed l
 ### Sample Detections (green = predicted, red = ground truth)
 
 ````carousel
-![Detection sample 1](/home/ajegetina/.gemini/antigravity/brain/1d266c65-a4b3-43b4-9e2c-dd948ba22e39/det_0000.jpg)
+![Detection sample 1](../results/sprint2/det_0000.jpg)
 <!-- slide -->
-![Detection sample 2](/home/ajegetina/.gemini/antigravity/brain/1d266c65-a4b3-43b4-9e2c-dd948ba22e39/det_0006.jpg)
+![Detection sample 2](../results/sprint2/det_0006.jpg)
 <!-- slide -->
-![Detection sample 3](/home/ajegetina/.gemini/antigravity/brain/1d266c65-a4b3-43b4-9e2c-dd948ba22e39/det_0013.jpg)
+![Detection sample 3](../results/sprint2/det_0013.jpg)
 <!-- slide -->
-![Detection sample 4](/home/ajegetina/.gemini/antigravity/brain/1d266c65-a4b3-43b4-9e2c-dd948ba22e39/det_0016.jpg)
+![Detection sample 4](../results/sprint2/det_0016.jpg)
 ````
 
 ---
@@ -190,12 +190,12 @@ Training: 20 epochs, lr=5e-5 (cosine annealing), batch 4. Best checkpoint at epo
 | PROSIT Requirement | Status | Evidence |
 |---|---|---|
 | Ghana data across 3 environments | ✅ | 12 videos: Highway, Residential, Market |
-| No library-based detection | ✅ | [detection_loss.py](file:///home/ajegetina/coding/school/ashesi/semester-2/vision/prosits/object-detection/src/metrics/detection_loss.py), [nms.py](file:///home/ajegetina/coding/school/ashesi/semester-2/vision/prosits/object-detection/src/metrics/nms.py) pure PyTorch |
+| No library-based detection | ✅ | [detection_loss.py](../src/metrics/detection_loss.py), [nms.py](../src/metrics/nms.py) pure PyTorch |
 | Manual objectness + cls + localisation loss | ✅ | `DetectionLoss.forward()` — 3 explicit terms |
 | Ablation study | ✅ | Sprint 1: +3.89pp mIoU; Sprint 3: +16.8% mAP |
 | 8+ detection classes | ✅ | 8 classes with PROSIT operational definitions |
 | Structured event log | ✅ | 4,972 entries with distance + offset |
-| Ground-plane localisation | ✅ | Pinhole camera model, [projection.py](file:///home/ajegetina/coding/school/ashesi/semester-2/vision/prosits/object-detection/src/utils/projection.py) |
+| Ground-plane localisation | ✅ | Pinhole camera model, [projection.py](../src/utils/projection.py) |
 | Lightweight tracking | ✅ | SORT-style IoU Hungarian assignment |
 | VLM integration | ✅ | OpenRouter API, structured JSON prompts |
 | Failure Analysis Report | ✅ | `docs/failure_report.md`, 50 VLM diagnoses |
@@ -204,6 +204,6 @@ Training: 20 epochs, lr=5e-5 (cosine annealing), batch 4. Best checkpoint at epo
 
 ## Repository
 
-**GitHub**: Push to your repo and share the link  
-**Colab Notebook**: `PROSIT2_Colab.ipynb` — orchestrates all scripts end-to-end  
-**Full Technical Report**: [docs/report.md](file:///home/ajegetina/coding/school/ashesi/semester-2/vision/prosits/object-detection/docs/report.md)
+**GitHub**: [Prosit-2](https://github.com/zamsi-ajegetina/object-detection)
+**Colab Notebook**: [PROSIT2_Colab.ipynb](PROSIT2_Colab.ipynb) — orchestrates all scripts end-to-end  
+**Full Technical Report**: [docs/report.md](../docs/report.md)
