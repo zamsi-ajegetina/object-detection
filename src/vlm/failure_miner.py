@@ -141,9 +141,13 @@ def mine_failures(args):
 
     vlm_results = []
 
-    if args.api_key or os.environ.get('GEMINI_API_KEY'):
+    if args.api_key or os.environ.get('OPENROUTER_API_KEY') or os.environ.get('GEMINI_API_KEY'):
         print(f"\n=== Step 3: Querying VLM for failure diagnosis ===")
-        client = VLMClient(api_key=args.api_key)
+        client = VLMClient(
+            api_key=args.api_key,
+            backend=getattr(args, 'backend', 'openrouter'),
+            model_name=getattr(args, 'model_name', None),
+        )
 
         for i, failure in enumerate(tqdm(failures, desc="VLM Diagnosis")):
             prompt = failure_diagnosis_prompt(
