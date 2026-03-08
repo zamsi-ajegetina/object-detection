@@ -257,7 +257,14 @@ if __name__ == '__main__':
                         help="Directory containing unlabelled Ghanaian frames")
     parser.add_argument('--model_path', type=str, default='checkpoints/detector_best.pth')
     parser.add_argument('--api_key', type=str, default=None,
-                        help="Gemini API key (or set GEMINI_API_KEY env var)")
+                        help="API key (OpenRouter key or Gemini key depending on --backend)")
+    parser.add_argument('--backend', type=str, default='openrouter',
+                        choices=['openrouter', 'gemini'],
+                        help="VLM backend to use (default: openrouter)")
+    parser.add_argument('--model_name', type=str, default=None,
+                        help="Model name override. "
+                             "OpenRouter default: google/gemini-2.0-flash-exp:free  "
+                             "Gemini default: gemini-2.0-flash")
     parser.add_argument('--output_dir', type=str, default='results/failure_mining/')
     parser.add_argument('--img_size', type=int, default=416)
     parser.add_argument('--conf_thresh', type=float, default=0.3)
