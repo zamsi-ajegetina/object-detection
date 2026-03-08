@@ -90,9 +90,12 @@ def evaluate(args):
                 red_mask = np.zeros_like(overlay)
                 red_mask[masks_cpu == 1] = [0, 0, 255]
 
+                # Combine masks before blending to avoid washing out the image twice
+                combined_mask = cv2.add(green_mask, red_mask)
+
                 # Blend
                 alpha = 0.5
-                overlay = cv2.addWeighted(overlay, 1.0, green_mask, alpha, 0)
+                overlay = cv2.addWeighted(overlay, 1.0, combined_mask, alpha, 0)
                 
                 out_path = out_dir / f"pred_{i:04d}_iou_{iou:.3f}.jpg"
                 cv2.imwrite(str(out_path), overlay)
