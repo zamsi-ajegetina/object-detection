@@ -22,7 +22,7 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.models.detection_model import DetectionNet
-from src.data.detection_dataset import CLASS_NAMES, NUM_CLASSES, get_detection_transforms
+from src.data.detection_dataset import CLASS_NAMES, NUM_CLASSES
 from src.metrics.nms import non_max_suppression
 from src.utils.projection import project_detection
 
@@ -37,6 +37,18 @@ PALETTE = [
     (0,   255, 255),  # animal       — cyan
     (255, 0,   255),  # open_drain   — magenta
 ]
+
+_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+_STD  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+
+def preprocess(img_bgr, img_size):
+    """Resize + normalise + convert to CHW tensor. No albumentations needed."""
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    img_rgb = cv2.resize(img_rgb, (img_size, img_size))
+    img_f   = img_rgb.astype(np.float32) / 255.0
+    img_f   = (img_f - _MEAN) / _STD
+    tensor  = torch.from_numpy(img_f.transpose(2, 0, 1)).float()  # CHW
+    return tensor
 
 
 def run_inference(args):
@@ -71,7 +83,6 @@ def run_inference(args):
     vis_dir = out_dir / "visualizations"
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    transforms = get_detection_transforms(img_size=args.img_size, train=False)
     event_log  = []
     total_det  = 0
     zero_det   = 0
@@ -83,13 +94,8 @@ def run_inference(args):
             img_bgr = cv2.imread(str(img_path))
             if img_bgr is None:
                 continue
-            img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-            aug = transforms(image=img_rgb)
-            tensor = aug["image"]
-            if isinstance(tensor, np.ndarray):
-                tensor = torch.from_numpy(tensor.transpose(2, 0, 1)).float()
-            tensor = tensor.unsqueeze(0).to(device)
+            tensor = preprocess(img_bgr, args.img_size).unsqueeze(0).to(device)
 
             # Inference
             preds  = model(tensor)
